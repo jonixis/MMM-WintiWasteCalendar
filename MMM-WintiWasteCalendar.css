@@ -1,0 +1,60 @@
+.MMM-WintiWasteCalendar .pickup-container {
+  line-height: 1.75;
+  font-size: 20px;
+  margin: 0;
+  padding: 0;
+  border-bottom: solid 1px #222;
+  position: relative;
+  text-align: left;
+  width: 240px;
+}
+
+.MMM-WintiWasteCalendar .legend-container {
+  font-size: 12px;
+  position: relative;
+  text-align: left;
+  width: 120px;
+}
+
+.MMM-WintiWasteCalendar .pickup-date {
+  color: #FFF;
+}
+
+.MMM-WintiWasteCalendar .legend-wrapper {
+  opacity: 0.6;
+  margin-top: 5px;
+}
+
+.MMM-WintiWasteCalendar .waste-pickup-icon-container {
+  display: flex;
+  justify-content: space-between;
+  position: absolute;
+  right: 0px;
+  top: 6px;
+  width: 70px;
+}
+
+.MMM-WintiWasteCalendar .waste-pickup-icon-legend-container {
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.MMM-WintiWasteCalendar .waste-pickup-icon {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+  vertical-align: bottom;
+  display: inline;
+  position: relative;
+  margin-left:4px;
+}
+
+.MMM-WintiWasteCalendar .waste-pickup-icon.recycle {
+  fill: #3499D4;
+}
+.MMM-WintiWasteCalendar .waste-pickup-icon.compost {
+  fill: #00A651;
+}
+.MMM-WintiWasteCalendar .waste-pickup-icon.garbage {
+  fill: #787878;
+}
