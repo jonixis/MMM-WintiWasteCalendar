@@ -1,15 +1,12 @@
 Module.register("MMM-WintiWasteCalendar", {
   defaults: {
-    garbageUrl:
-      "https://m.winterthur.ch/index.php?apid=3041966&apparentid=5704846",
-    compostUrl:
-      "https://m.winterthur.ch/index.php?apid=3041966&apparentid=5704846",
-    recyclingUrl:
-      "https://m.winterthur.ch/index.php?apid=3041966&apparentid=5704846",
+    garbageUrl: "",
+    compostUrl: "",
+    recyclingUrl: "",
     maxEntries: 3,
   },
 
-  wasteTypes: {
+  wasteType: Object.freeze({
     garbage: {
       label: "Kehricht",
       icon: "fa-trash-can",
@@ -22,16 +19,9 @@ Module.register("MMM-WintiWasteCalendar", {
       label: "Papier/Karton",
       icon: "fa-recycle",
     },
-  },
+  }),
 
-  nextPickups: [
-    {
-      date: "04.22.2024",
-      garbage: true,
-      compost: true,
-      recycling: true,
-    },
-  ],
+  nextPickups: null,
 
   getStyles() {
     return ["MMM-WintiWasteCalendar.css", "font-awesome.css"];
@@ -50,19 +40,20 @@ Module.register("MMM-WintiWasteCalendar", {
   start() {
     Log.info("Starting module:", this.name);
 
-    this.sendSocketNotification("FETCH_DATES", this.config);
+    this.sendSocketNotification("FETCH_PICKUPS", this.config);
   },
 
   socketNotificationReceived(notification, payload) {
-    if (notification === "NEW_DATES") {
+    if (notification === "UPDATE_PICKUPS") {
       this.nextPickups = payload;
+      this.updateDom();
     }
   },
 
   getDom() {
     const wrapper = document.createElement("div");
 
-    if (this.nextPickups.length === 0) {
+    if (!this.nextPickups?.length) {
       wrapper.innerHTML = this.translate("LOADING");
       wrapper.className = "dimmed light small";
       return wrapper;
@@ -71,9 +62,7 @@ Module.register("MMM-WintiWasteCalendar", {
     const pickupWrapper = document.createElement("div");
     pickupWrapper.classList.add("pickup-wrapper");
 
-    for (let i = 0; i < this.nextPickups.length; ++i) {
-      const pickup = this.nextPickups[i];
-
+    for (const { date, pickup } of this.nextPickups) {
       const pickupContainer = document.createElement("div");
       pickupContainer.classList.add("pickup-container");
 
@@ -81,7 +70,7 @@ Module.register("MMM-WintiWasteCalendar", {
       dateContainer.classList.add("pickup-date");
 
       const today = moment().startOf("day");
-      const pickUpDate = moment(pickup.date);
+      const pickUpDate = moment(date, "MM/DD/YY");
       if (today.isSame(pickUpDate)) {
         dateContainer.innerHTML = this.translate("TODAY");
       } else if (moment(today).add(1, "days").isSame(pickUpDate)) {
@@ -98,18 +87,14 @@ Module.register("MMM-WintiWasteCalendar", {
       iconContainer.classList.add("waste-pickup-icon-container");
 
       if (pickup.garbage) {
-        iconContainer.appendChild(
-          this.createIcon(this.wasteTypes.garbage.icon),
-        );
+        iconContainer.appendChild(this.createIcon(this.wasteType.garbage.icon));
       }
       if (pickup.compost) {
-        iconContainer.appendChild(
-          this.createIcon(this.wasteTypes.compost.icon),
-        );
+        iconContainer.appendChild(this.createIcon(this.wasteType.compost.icon));
       }
       if (pickup.recycling) {
         iconContainer.appendChild(
-          this.createIcon(this.wasteTypes.recycling.icon),
+          this.createIcon(this.wasteType.recycling.icon),
         );
       }
 
@@ -123,14 +108,11 @@ Module.register("MMM-WintiWasteCalendar", {
     const legendWrapper = document.createElement("div");
     legendWrapper.classList.add("legend-wrapper");
     legendWrapper.classList.add("light");
-    legendWrapper.appendChild(this.createLegendEntry(this.wasteTypes.garbage));
-    legendWrapper.appendChild(this.createLegendEntry(this.wasteTypes.compost));
-    legendWrapper.appendChild(
-      this.createLegendEntry(this.wasteTypes.recycling),
-    );
+    legendWrapper.appendChild(this.createLegendEntry(this.wasteType.garbage));
+    legendWrapper.appendChild(this.createLegendEntry(this.wasteType.compost));
+    legendWrapper.appendChild(this.createLegendEntry(this.wasteType.recycling));
 
     wrapper.appendChild(legendWrapper);
-    console.log(this);
 
     return wrapper;
   },
