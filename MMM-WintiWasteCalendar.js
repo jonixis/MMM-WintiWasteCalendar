@@ -3,7 +3,7 @@ Module.register("MMM-WintiWasteCalendar", {
     garbageUrl: "",
     compostUrl: "",
     recyclingUrl: "",
-    maxEntries: 3,
+    maxWeeks: 2,
   },
 
   wasteType: Object.freeze({
@@ -62,7 +62,7 @@ Module.register("MMM-WintiWasteCalendar", {
     const pickupWrapper = document.createElement("div");
     pickupWrapper.classList.add("pickup-wrapper");
 
-    for (const { date, pickup } of this.nextPickups) {
+    for (const { dateString, pickup } of this.nextPickups) {
       const pickupContainer = document.createElement("div");
       pickupContainer.classList.add("pickup-container");
 
@@ -70,15 +70,15 @@ Module.register("MMM-WintiWasteCalendar", {
       dateContainer.classList.add("pickup-date");
 
       const today = moment().startOf("day");
-      const pickUpDate = moment(date, "MM/DD/YY");
-      if (today.isSame(pickUpDate)) {
+      const pickupDate = moment(dateString, "MM/DD/YY");
+      if (today.isSame(pickupDate)) {
         dateContainer.innerHTML = this.translate("TODAY");
-      } else if (moment(today).add(1, "days").isSame(pickUpDate)) {
+      } else if (moment(today).add(1, "days").isSame(pickupDate)) {
         dateContainer.innerHTML = this.translate("TOMORROW");
-      } else if (moment(today).add(7, "days").isAfter(pickUpDate)) {
-        dateContainer.innerHTML = pickUpDate.format("dddd");
+      } else if (moment(today).add(7, "days").isAfter(pickupDate)) {
+        dateContainer.innerHTML = pickupDate.format("dddd");
       } else {
-        dateContainer.innerHTML = pickUpDate.format("MMMM D");
+        dateContainer.innerHTML = pickupDate.format("MMMM D");
       }
 
       pickupContainer.appendChild(dateContainer);

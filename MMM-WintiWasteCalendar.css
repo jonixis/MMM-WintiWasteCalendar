@@ -27,15 +27,19 @@
 
 .MMM-WintiWasteCalendar .waste-pickup-icon-container {
   display: flex;
-  justify-content: space-between;
+  justify-content: start;
   position: absolute;
   right: 0px;
   top: 6px;
-  width: 70px;
+  width: 80px;
 }
 
 .MMM-WintiWasteCalendar .waste-pickup-icon-legend-container {
   margin-left: 10px;
+  margin-right: 10px;
+}
+
+.MMM-WintiWasteCalendar .waste-pickup-icon-container i{
   margin-right: 10px;
 }
 

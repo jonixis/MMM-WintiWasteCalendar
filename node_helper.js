@@ -2,6 +2,7 @@ const NodeHelper = require("node_helper");
 const Log = require("logger");
 const axios = require("axios");
 const cheerio = require("cheerio");
+const moment = require("moment");
 
 module.exports = NodeHelper.create({
   monthToNumber: Object.freeze(
@@ -36,22 +37,28 @@ module.exports = NodeHelper.create({
   async socketNotificationReceived(notification, payload) {
     this.config = payload;
     if (notification === "FETCH_PICKUPS") {
-      const garbagePickups = await this.fetchPickups(this.wasteType.garbage);
-      const compostPickups = await this.fetchPickups(this.wasteType.compost);
-      const recyclingPickups = await this.fetchPickups(
-        this.wasteType.recycling,
-      );
+      try {
+        const garbagePickups = await this.fetchPickups(this.wasteType.garbage);
+        const compostPickups = await this.fetchPickups(this.wasteType.compost);
+        const recyclingPickups = await this.fetchPickups(
+          this.wasteType.recycling,
+        );
+        const pickups = this.mergePickups(
+          garbagePickups,
+          compostPickups,
+          recyclingPickups,
+        );
 
-      const pickups = this.mergePickups(
-        garbagePickups,
-        compostPickups,
-        recyclingPickups,
-      );
-
-      this.sendSocketNotification(
-        "UPDATE_PICKUPS",
-        Array.from(pickups, ([date, pickup]) => ({ date, pickup })),
-      );
+        this.sendSocketNotification(
+          "UPDATE_PICKUPS",
+          Array.from(pickups, ([dateString, pickup]) => ({
+            dateString,
+            pickup,
+          })),
+        );
+      } catch (error) {
+        Log.error(`${this.name} error while fetching pickups: ${error}`);
+      }
     }
   },
 
@@ -64,7 +71,7 @@ module.exports = NodeHelper.create({
     const rows = $(".theRow");
 
     const pickups = new Map();
-    for (let i = 0; i < this.config.maxEntries; ++i) {
+    for (let i = 0; i < rows.length; ++i) {
       const scrapedDate = $(rows[i]).find(".theDate").text();
 
       const day = scrapedDate.substring(4, 6);
@@ -72,6 +79,15 @@ module.exports = NodeHelper.create({
       const year = scrapedDate.substring(15, 17);
 
       const dateString = [month, day, year].join("/");
+      const date = moment(dateString, "MM/DD/YY");
+
+      const maxDate = moment()
+        .startOf("day")
+        .add(this.config.maxWeeks * 7, "days");
+      const isValid = date.isBefore(maxDate, "day");
+      if (!isValid) {
+        break;
+      }
 
       const pickup = this.createPickup(type);
       pickups.set(dateString, pickup);
