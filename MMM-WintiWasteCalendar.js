@@ -4,6 +4,7 @@ Module.register("MMM-WintiWasteCalendar", {
     compostUrl: "",
     recyclingUrl: "",
     maxWeeks: 2,
+    updateInterval: 6 * 60 * 60 * 1000, // Update every six hours
   },
 
   wasteType: Object.freeze({
@@ -40,7 +41,11 @@ Module.register("MMM-WintiWasteCalendar", {
   start() {
     Log.info("Starting module:", this.name);
 
-    this.sendSocketNotification("FETCH_PICKUPS", this.config);
+    const fetchPickups = () =>
+      this.sendSocketNotification("FETCH_PICKUPS", this.config);
+
+    fetchPickups();
+    setInterval(fetchPickups, this.config.updateInterval);
   },
 
   socketNotificationReceived(notification, payload) {
