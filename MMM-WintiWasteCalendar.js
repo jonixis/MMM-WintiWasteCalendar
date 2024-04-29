@@ -4,7 +4,7 @@ Module.register("MMM-WintiWasteCalendar", {
     compostUrl: "",
     recyclingUrl: "",
     maxWeeks: 2,
-    updateInterval: 6 * 60 * 60 * 1000, // Update every six hours
+    updateInterval: 1 * 60 * 60 * 1000, // Update every six hours
   },
 
   wasteType: Object.freeze({
@@ -51,7 +51,8 @@ Module.register("MMM-WintiWasteCalendar", {
   socketNotificationReceived(notification, payload) {
     if (notification === "UPDATE_PICKUPS") {
       this.nextPickups = payload;
-      this.updateDom();
+      this.updateDom(1000);
+      this.handelTelegramNotifications(this.nextPickups);
     }
   },
 
@@ -137,5 +138,47 @@ Module.register("MMM-WintiWasteCalendar", {
     legendContainer.appendChild(descriptionContainer);
 
     return legendContainer;
+  },
+
+  handelTelegramNotifications(pickups) {
+    const today = moment().startOf("day");
+
+    for (const { dateString, pickup } of pickups) {
+      const currentHour = moment().hour();
+      const pickupDate = moment(dateString, "MM/DD/YY");
+
+      // Check if today is one day before pickup or same day
+      if (
+        moment(today)
+          .hour(currentHour)
+          .isSame(moment(pickupDate).subtract(1, "days").hour(20), "hour")
+      ) {
+        this.sendTelegramMessage("*Morn:*", pickup);
+      } else if (
+        moment(today)
+          .hour(currentHour)
+          .isSame(moment(pickupDate).hour(6), "hour")
+      ) {
+        this.sendTelegramMessage("*Hüt:*", pickup);
+      }
+    }
+  },
+
+  sendTelegramMessage: function (customText, pickup) {
+    let message = "♻️🚮 Abfall Reminder 🚮♻️\n\n";
+
+    message += customText + "\n";
+
+    if (pickup.garbage) {
+      message += "- `" + this.wasteType.garbage.label + "`\n";
+    }
+    if (pickup.compost) {
+      message += "- `" + this.wasteType.compost.label + "`\n";
+    }
+    if (pickup.recycling) {
+      message += "- `" + this.wasteType.recycling.label + "`\n";
+    }
+
+    this.sendNotification("TELBOT_TELL_GROUP", message);
   },
 });
