@@ -4,7 +4,18 @@ Module.register("MMM-WintiWasteCalendar", {
     compostUrl: "",
     recyclingUrl: "",
     maxWeeks: 2,
-    updateInterval: 1 * 60 * 60 * 1000, // Update every six hours
+    updateInterval: 60 * 60 * 1000, // Update every hour
+    telegramReminder: {
+      message: "♻️🚮 Abfallkalender 🚮♻️\n\n",
+      oneDayBefore: {
+        hour: 20,
+        text: "*Morgen:*",
+      },
+      sameDay: {
+        hour: 6,
+        text: "*Heute:*",
+      },
+    },
   },
 
   wasteType: Object.freeze({
@@ -147,25 +158,33 @@ Module.register("MMM-WintiWasteCalendar", {
       const currentHour = moment().hour();
       const pickupDate = moment(dateString, "MM/DD/YY");
 
+      const oneDayBeforeHour = this.config.telegramReminder.oneDayBefore.hour;
+      const sameDayHour = this.config.telegramReminder.sameDay.hour;
+      const oneDayBeforeText = this.config.telegramReminder.oneDayBefore.text;
+      const sameDayText = this.config.telegramReminder.sameDay.text;
+
       // Check if today is one day before pickup or same day
       if (
         moment(today)
           .hour(currentHour)
-          .isSame(moment(pickupDate).subtract(1, "days").hour(20), "hour")
+          .isSame(
+            moment(pickupDate).subtract(1, "days").hour(oneDayBeforeHour),
+            "hour",
+          )
       ) {
-        this.sendTelegramMessage("*Morn:*", pickup);
+        this.sendTelegramMessage(oneDayBeforeText, pickup);
       } else if (
         moment(today)
           .hour(currentHour)
-          .isSame(moment(pickupDate).hour(6), "hour")
+          .isSame(moment(pickupDate).hour(sameDayHour), "hour")
       ) {
-        this.sendTelegramMessage("*Hüt:*", pickup);
+        this.sendTelegramMessage(sameDayText, pickup);
       }
     }
   },
 
   sendTelegramMessage: function (customText, pickup) {
-    let message = "♻️🚮 Abfall Reminder 🚮♻️\n\n";
+    let message = this.config.telegramReminder.message;
 
     message += customText + "\n";
 
